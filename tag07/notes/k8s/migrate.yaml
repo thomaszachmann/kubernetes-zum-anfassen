@@ -1,0 +1,42 @@
+# k8s/migrate.yaml – Stand Ende Tag 7
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate
+  labels:
+    app.kubernetes.io/name: migrate
+    app.kubernetes.io/part-of: notes
+spec:
+  backoffLimit: 4
+  ttlSecondsAfterFinished: 600
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: migrate
+        app.kubernetes.io/part-of: notes
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: migrate
+          image: notes-api:0.2.0
+          args: [migrate]
+          env:
+            - name: NOTES_DB_URL_FILE
+              value: /etc/notes/db-url
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              memory: 64Mi
+          volumeMounts:
+            - name: db-url
+              mountPath: /etc/notes
+              readOnly: true
+      volumes:
+        - name: db-url
+          secret:
+            secretName: notes-db
+            items:
+              - key: db-url
+                path: db-url

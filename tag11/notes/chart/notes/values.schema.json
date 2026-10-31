@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["existingSecrets", "api", "web", "worker", "db"],
+  "properties": {
+    "existingSecrets": {
+      "type": "object",
+      "required": ["api", "db"],
+      "properties": {
+        "api": {"type": "string", "minLength": 1},
+        "db": {"type": "string", "minLength": 1}
+      }
+    },
+    "api": {
+      "type": "object",
+      "properties": {"replicas": {"type": "integer", "minimum": 1}}
+    },
+    "web": {
+      "type": "object",
+      "properties": {
+        "replicas": {"type": "integer", "minimum": 1},
+        "service": {
+          "type": "object",
+          "properties": {
+            "type": {"enum": ["ClusterIP", "NodePort"]},
+            "nodePort": {"type": "integer", "minimum": 30000, "maximum": 32767}
+          }
+        }
+      }
+    },
+    "worker": {
+      "type": "object",
+      "properties": {"interval": {"type": "integer", "minimum": 1}}
+    },
+    "db": {
+      "type": "object",
+      "properties": {"storage": {"type": "string", "pattern": "^[0-9]+(Mi|Gi)$"}}
+    }
+  }
+}

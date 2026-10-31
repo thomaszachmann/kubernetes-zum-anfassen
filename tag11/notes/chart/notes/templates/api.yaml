@@ -1,0 +1,73 @@
+# chart/notes/templates/api.yaml – Stand Ende Tag 10
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  labels:
+    {{- include "notes.labels" (dict "ctx" $ "name" "api") | nindent 4 }}
+spec:
+  replicas: {{ .Values.api.replicas }}
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      {{- include "notes.selector" "api" | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "notes.labels" (dict "ctx" $ "name" "api") | nindent 8 }}
+    spec:
+      {{- include "notes.podSecurity" dict | nindent 6 }}
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: api
+          image: {{ include "notes.image" (dict "ctx" $ "image" .Values.api.image) }}
+          {{- include "notes.containerSecurity" . | nindent 10 }}
+          env:
+            - name: NOTES_API_KEY_FILE
+              value: /etc/notes/api-key
+            - name: NOTES_DB_URL_FILE
+              value: /etc/notes/db-url
+          ports:
+            - containerPort: 8080
+          resources:
+            {{- toYaml .Values.api.resources | nindent 12 }}
+          startupProbe:
+            httpGet: {path: /healthz, port: 8080}
+            periodSeconds: 1
+            failureThreshold: 30
+          readinessProbe:
+            httpGet: {path: /healthz, port: 8080}
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: {path: /version, port: 8080}
+            periodSeconds: 10
+            failureThreshold: 3
+          lifecycle:
+            preStop:
+              sleep:
+                seconds: 5
+          volumeMounts:
+            - name: secrets
+              mountPath: /etc/notes
+              readOnly: true
+      volumes:
+        {{- include "notes.secretVolume" . | nindent 8 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  labels:
+    {{- include "notes.labels" (dict "ctx" $ "name" "api") | nindent 4 }}
+spec:
+  selector:
+    {{- include "notes.selector" "api" | nindent 4 }}
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080

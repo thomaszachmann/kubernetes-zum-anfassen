@@ -1,0 +1,7 @@
+# /etc/rancher/rke2/config.yaml auf rke2-server – Stand Ende Tag 12
+# Vorlage: SERVER_IP ersetzt Drill 3 per sed durch die echte Adresse.
+write-kubeconfig-mode: "0600"
+tls-san:
+  - SERVER_IP
+# Traefik (Standard ab v1.36) aus: das Gateway macht Envoy wie in Tag 11.
+ingress-controller: none

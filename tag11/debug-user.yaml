@@ -1,0 +1,4 @@
+# debug-user.yaml – Ergänzung für kubectl debug --custom (Tag 11)
+# busybox läuft sonst als root, runAsNonRoot im Pod verbietet das.
+securityContext:
+  runAsUser: 65532

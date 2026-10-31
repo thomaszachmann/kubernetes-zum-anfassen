@@ -1,0 +1,43 @@
+# chart/notes/templates/migrate-job.yaml – Stand Ende Tag 10
+# Hook: läuft nach install und vor jedem upgrade; der alte Job wird vorher gelöscht.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate
+  labels:
+    {{- include "notes.labels" (dict "ctx" $ "name" "migrate") | nindent 4 }}
+  annotations:
+    helm.sh/hook: post-install,pre-upgrade
+    helm.sh/hook-weight: "0"
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  backoffLimit: 4
+  template:
+    metadata:
+      labels:
+        {{- include "notes.labels" (dict "ctx" $ "name" "migrate") | nindent 8 }}
+    spec:
+      {{- include "notes.podSecurity" dict | nindent 6 }}
+      restartPolicy: OnFailure
+      containers:
+        - name: migrate
+          image: {{ include "notes.image" (dict "ctx" $ "image" .Values.api.image) }}
+          {{- include "notes.containerSecurity" . | nindent 10 }}
+          args: [migrate]
+          env:
+            - name: NOTES_DB_URL_FILE
+              value: /etc/notes/db-url
+          resources:
+            requests: {cpu: 50m, memory: 32Mi}
+            limits: {memory: 64Mi}
+          volumeMounts:
+            - name: db-url
+              mountPath: /etc/notes
+              readOnly: true
+      volumes:
+        - name: db-url
+          secret:
+            secretName: {{ .Values.existingSecrets.db }}
+            items:
+              - key: db-url
+                path: db-url

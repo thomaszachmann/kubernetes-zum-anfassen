@@ -1,0 +1,24 @@
+# chart/notes/templates/tests/test-api.yaml – Stand Ende Tag 10
+apiVersion: v1
+kind: Pod
+metadata:
+  name: notes-test-api
+  labels:
+    {{- include "notes.labels" (dict "ctx" $ "name" "test") | nindent 4 }}
+  annotations:
+    helm.sh/hook: test
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  # curlimages/curl läuft als curl_user (UID 100), runAsNonRoot braucht die Zahl
+  {{- include "notes.podSecurity" (dict "uid" 100) | nindent 2 }}
+  restartPolicy: Never
+  containers:
+    - name: curl
+      image: curlimages/curl:8.23.0
+      {{- include "notes.containerSecurity" . | nindent 6 }}
+      command: [sh, -c]
+      args:
+        - curl -fsS http://api:8080/healthz && curl -fsS http://web:3000/healthz
+      resources:
+        requests: {cpu: 10m, memory: 16Mi}
+        limits: {memory: 32Mi}

@@ -1,0 +1,48 @@
+# chart/notes/templates/worker.yaml – Stand Ende Tag 10
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  labels:
+    {{- include "notes.labels" (dict "ctx" $ "name" "worker") | nindent 4 }}
+spec:
+  replicas: {{ .Values.worker.replicas }}
+  selector:
+    matchLabels:
+      {{- include "notes.selector" "worker" | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "notes.labels" (dict "ctx" $ "name" "worker") | nindent 8 }}
+      annotations:
+        {{- $config := include (print $.Template.BasePath "/configmap.yaml") . }}
+        checksum/config: {{ $config | sha256sum }}
+    spec:
+      {{- include "notes.podSecurity" dict | nindent 6 }}
+      containers:
+        - name: worker
+          image: {{ include "notes.image" (dict "ctx" $ "image" .Values.worker.image) }}
+          {{- include "notes.containerSecurity" . | nindent 10 }}
+          envFrom:
+            - configMapRef:
+                name: notes-config
+          env:
+            - name: NOTES_API_KEY_FILE
+              value: /etc/notes/api-key
+          resources:
+            {{- toYaml .Values.worker.resources | nindent 12 }}
+          volumeMounts:
+            - name: secrets
+              mountPath: /etc/notes
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: secrets
+          secret:
+            secretName: {{ .Values.existingSecrets.api }}
+            items:
+              - key: api-key
+                path: api-key
+        - name: tmp
+          emptyDir: {}

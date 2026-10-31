@@ -1,0 +1,8 @@
+notes {{ .Chart.AppVersion }} ist im Namespace {{ .Release.Namespace }} installiert.
+{{- if eq .Values.web.service.type "NodePort" }}
+Weboberfläche: http://localhost:{{ .Values.web.service.nodePort }}
+{{- end }}
+{{- if .Values.gateway.enabled }}
+Über das Gateway: http://{{ .Values.gateway.hostname }}:30080
+{{- end }}
+Test: helm test {{ .Release.Name }} -n {{ .Release.Namespace }}

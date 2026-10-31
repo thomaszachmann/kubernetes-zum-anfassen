@@ -1,0 +1,34 @@
+# k8s/gateway.yaml – Stand Ende Tag 11 (Plattform: einmal pro Cluster)
+# Envoy Gateway selbst kommt per Helm (siehe Tag 11, Drill 1).
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: nodeport
+  namespace: envoy-gateway-system
+spec:
+  provider:
+    type: Kubernetes
+    kubernetes:
+      envoyService:
+        type: NodePort
+        patch:
+          type: StrategicMerge
+          value:
+            spec:
+              # Standard ist Local: dann antwortet nur ein Node, auf dem Envoy läuft.
+              externalTrafficPolicy: Cluster
+              ports:
+                - port: 80
+                  nodePort: 30080
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: eg
+spec:
+  controllerName: gateway.envoyproxy.io/gatewayclass-controller
+  parametersRef:
+    group: gateway.envoyproxy.io
+    kind: EnvoyProxy
+    name: nodeport
+    namespace: envoy-gateway-system

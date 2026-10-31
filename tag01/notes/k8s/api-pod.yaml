@@ -1,0 +1,17 @@
+# k8s/api-pod.yaml – Stand Ende Tag 1
+apiVersion: v1
+kind: Pod
+metadata:
+  name: api
+  labels:
+    app.kubernetes.io/name: api
+    app.kubernetes.io/part-of: notes
+spec:
+  containers:
+    - name: api
+      image: notes-api:0.1.0
+      env:
+        - name: NOTES_API_KEY
+          value: lab-api-key-123
+      ports:
+        - containerPort: 8080

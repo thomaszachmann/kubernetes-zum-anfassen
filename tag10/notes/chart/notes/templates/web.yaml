@@ -1,0 +1,63 @@
+# chart/notes/templates/web.yaml – Stand Ende Tag 10
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  labels:
+    {{- include "notes.labels" (dict "ctx" $ "name" "web") | nindent 4 }}
+spec:
+  replicas: {{ .Values.web.replicas }}
+  selector:
+    matchLabels:
+      {{- include "notes.selector" "web" | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "notes.labels" (dict "ctx" $ "name" "web") | nindent 8 }}
+    spec:
+      {{- include "notes.podSecurity" (dict "uid" 1000) | nindent 6 }}
+      containers:
+        - name: web
+          image: {{ include "notes.image" (dict "ctx" $ "image" .Values.web.image) }}
+          {{- include "notes.containerSecurity" . | nindent 10 }}
+          env:
+            - name: NOTES_API_URL
+              valueFrom:
+                configMapKeyRef: {name: notes-config, key: NOTES_API_URL}
+            - name: NOTES_API_KEY
+              valueFrom:
+                secretKeyRef: {name: {{ .Values.existingSecrets.api }}, key: api-key}
+          ports:
+            - containerPort: 3000
+          resources:
+            {{- toYaml .Values.web.resources | nindent 12 }}
+          readinessProbe:
+            httpGet: {path: /healthz, port: 3000}
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: {path: /healthz, port: 3000}
+            periodSeconds: 10
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  labels:
+    {{- include "notes.labels" (dict "ctx" $ "name" "web") | nindent 4 }}
+spec:
+  type: {{ .Values.web.service.type }}
+  selector:
+    {{- include "notes.selector" "web" | nindent 4 }}
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+      {{- if eq .Values.web.service.type "NodePort" }}
+      nodePort: {{ .Values.web.service.nodePort }}
+      {{- end }}

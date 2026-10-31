@@ -1,0 +1,13 @@
+# values-rke2.yaml – Stand Ende Tag 13: dasselbe Chart auf RKE2
+# Vorlage: SERVER_IP ersetzt Drill 7 per sed durch die Adresse von rke2-server.
+api:
+  image:
+    repository: SERVER_IP:5000/notes-api
+web:
+  image:
+    repository: SERVER_IP:5000/notes-web
+worker:
+  image:
+    repository: SERVER_IP:5000/notes-worker
+db:
+  storageClassName: local-path   # aus Tag 12, Daten liegen auf einem Node

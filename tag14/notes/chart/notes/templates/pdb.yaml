@@ -1,0 +1,17 @@
+{{/* chart/notes/templates/pdb.yaml – Stand Ende Tag 14 */}}
+{{- if .Values.pdb.enabled }}
+{{- range $name := list "api" "web" }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "notes.labels" (dict "ctx" $ "name" $name) | nindent 4 }}
+spec:
+  minAvailable: {{ (index $.Values.pdb $name).minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "notes.selector" $name | nindent 6 }}
+{{- end }}
+{{- end }}

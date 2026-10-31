@@ -1,0 +1,4 @@
+# .helmignore – nicht ins Chart-Paket
+.DS_Store
+*.tgz
+values-*.yaml

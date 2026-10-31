@@ -1,0 +1,47 @@
+# k8s/gateway.yaml – Stand Ende Tag 14 (Plattform: einmal pro Cluster)
+# Envoy Gateway selbst kommt per Helm (siehe Tag 11, Drill 1).
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: nodeport
+  namespace: envoy-gateway-system
+spec:
+  provider:
+    type: Kubernetes
+    kubernetes:
+      # Ab Tag 14: zwei Envoy-Pods auf verschiedenen Nodes, ein Ausfall legt
+      # das Gateway nicht mehr lahm.
+      envoyDeployment:
+        replicas: 2
+        pod:
+          topologySpreadConstraints:
+            - maxSkew: 1
+              topologyKey: kubernetes.io/hostname
+              whenUnsatisfiable: DoNotSchedule
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: envoy
+              matchLabelKeys: [pod-template-hash]
+      envoyService:
+        type: NodePort
+        patch:
+          type: StrategicMerge
+          value:
+            spec:
+              # Standard ist Local: dann antwortet nur ein Node, auf dem Envoy läuft.
+              externalTrafficPolicy: Cluster
+              ports:
+                - port: 80
+                  nodePort: 30080
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: eg
+spec:
+  controllerName: gateway.envoyproxy.io/gatewayclass-controller
+  parametersRef:
+    group: gateway.envoyproxy.io
+    kind: EnvoyProxy
+    name: nodeport
+    namespace: envoy-gateway-system

@@ -1,0 +1,4 @@
+# /etc/rancher/rke2/config.yaml auf rke2-agent1 und rke2-agent2 – Stand Ende Tag 12
+server: https://SERVER_IP:9345
+# Das Join-Token liegt in einer Datei, nie im Klartext in der Konfig.
+token-file: /etc/rancher/rke2/token

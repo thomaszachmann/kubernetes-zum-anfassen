@@ -1,0 +1,11 @@
+# Begleitcode-Repo
+.DS_Store
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+*.tgz
+*.tar
+kubeconfig*
+*.kubeconfig
+.terraform/

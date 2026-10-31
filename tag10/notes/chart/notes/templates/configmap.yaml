@@ -1,0 +1,10 @@
+# chart/notes/templates/configmap.yaml – Stand Ende Tag 10
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: notes-config
+  labels:
+    {{- include "notes.labels" (dict "ctx" $ "name" "config") | nindent 4 }}
+data:
+  NOTES_API_URL: http://api:8080
+  INTERVAL: {{ .Values.worker.interval | quote }}

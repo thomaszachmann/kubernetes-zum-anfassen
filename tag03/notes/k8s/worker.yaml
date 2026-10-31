@@ -1,0 +1,27 @@
+# k8s/worker.yaml – Stand Ende Tag 3
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  labels:
+    app.kubernetes.io/name: worker
+    app.kubernetes.io/part-of: notes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: worker
+        app.kubernetes.io/part-of: notes
+    spec:
+      containers:
+        - name: worker
+          image: notes-worker:0.1.0
+          env:
+            - name: NOTES_API_URL
+              value: http://api:8080
+            - name: NOTES_API_KEY
+              value: lab-api-key-123

@@ -1,0 +1,8 @@
+# values-pruefung.yaml – Anhang B, Übung 3: nur die Abweichungen zu values-rke2.yaml
+api:
+  replicas: 2
+db:
+  storage: 512Mi
+# Ein zweites Gateway bekäme ebenfalls NodePort 30080 – den hat notes schon.
+gateway:
+  enabled: false

@@ -1,0 +1,46 @@
+# chart/notes/values.yaml – Stand Ende Tag 10
+# Secrets legt das Chart nicht an: k8s/secrets.sh erzeugt notes-api und notes-db.
+existingSecrets:
+  api: notes-api   # Schlüssel api-key
+  db: notes-db     # Schlüssel password, db-url
+
+api:
+  replicas: 3
+  image:
+    repository: notes-api
+    tag: ""        # leer = appVersion aus Chart.yaml
+  resources:
+    requests: {cpu: 50m, memory: 32Mi}
+    limits: {memory: 64Mi}
+
+web:
+  replicas: 2
+  image:
+    repository: notes-web
+    tag: 0.1.0
+  service:
+    type: NodePort
+    nodePort: 30080
+  resources:
+    requests: {cpu: 50m, memory: 96Mi}
+    limits: {memory: 192Mi}
+
+worker:
+  replicas: 1
+  interval: 10
+  image:
+    repository: notes-worker
+    tag: 0.1.0
+  resources:
+    requests: {cpu: 20m, memory: 64Mi}
+    limits: {memory: 128Mi}
+
+db:
+  image:
+    repository: postgres
+    tag: 18.6-alpine
+  storage: 1Gi
+  storageClassName: ""   # leer = Standard-StorageClass des Clusters
+  resources:
+    requests: {cpu: 100m, memory: 128Mi}
+    limits: {memory: 256Mi}

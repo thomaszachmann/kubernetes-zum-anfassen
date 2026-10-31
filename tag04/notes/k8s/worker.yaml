@@ -1,0 +1,36 @@
+# k8s/worker.yaml – Stand Ende Tag 4
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  labels:
+    app.kubernetes.io/name: worker
+    app.kubernetes.io/part-of: notes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: worker
+        app.kubernetes.io/part-of: notes
+    spec:
+      containers:
+        - name: worker
+          image: notes-worker:0.1.0
+          envFrom:
+            - configMapRef:
+                name: notes-config
+          env:
+            - name: NOTES_API_KEY_FILE
+              value: /etc/notes/api-key
+          volumeMounts:
+            - name: api-key
+              mountPath: /etc/notes
+              readOnly: true
+      volumes:
+        - name: api-key
+          secret:
+            secretName: notes-api

@@ -1,0 +1,76 @@
+# chart/notes/templates/db.yaml – Stand Ende Tag 10
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+  labels:
+    {{- include "notes.labels" (dict "ctx" $ "name" "db") | nindent 4 }}
+spec:
+  clusterIP: None
+  selector:
+    {{- include "notes.selector" "db" | nindent 4 }}
+  ports:
+    - name: postgres
+      port: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+  labels:
+    {{- include "notes.labels" (dict "ctx" $ "name" "db") | nindent 4 }}
+spec:
+  serviceName: db
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "notes.selector" "db" | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "notes.labels" (dict "ctx" $ "name" "db") | nindent 8 }}
+    spec:
+      {{- include "notes.podSecurity" (dict "uid" 70 "fsGroup" 70) | nindent 6 }}
+      containers:
+        - name: postgres
+          image: {{ include "notes.image" (dict "ctx" $ "image" .Values.db.image) }}
+          {{- include "notes.containerSecurity" . | nindent 10 }}
+          env:
+            - name: POSTGRES_USER
+              value: notes
+            - name: POSTGRES_DB
+              value: notes
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: {{ .Values.existingSecrets.db }}, key: password}
+          ports:
+            - containerPort: 5432
+          resources:
+            {{- toYaml .Values.db.resources | nindent 12 }}
+          readinessProbe:
+            exec:
+              command: [pg_isready, -h, 127.0.0.1, -U, notes, -d, notes]
+            periodSeconds: 5
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql
+            - name: run
+              mountPath: /var/run/postgresql
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: run
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        {{- with .Values.db.storageClassName }}
+        storageClassName: {{ . }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.db.storage }}

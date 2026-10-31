@@ -1,0 +1,7 @@
+# chart/notes/Chart.yaml – Stand Ende Tag 10
+apiVersion: v2
+name: notes
+description: Die notes-Anwendung aus dem Trainingslager (api, web, worker, Postgres)
+type: application
+version: 0.1.0
+appVersion: "0.2.0"
